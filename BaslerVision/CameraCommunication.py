@@ -63,7 +63,6 @@ class CameraProcessor:
                     if self.frame_count % exposure_time == 0: 
                         self.mem_pool.append(frame)
 
-
                     self.frame_count += 1
 
                     if (len(self.mem_pool) > max_mempool):
