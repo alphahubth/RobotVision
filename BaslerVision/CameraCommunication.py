@@ -1,14 +1,13 @@
 from pypylon import pylon
 import cv2
 import os
-from .utils import get_current_time
 import supervision as sv
 
 
 class CameraProcessor:
 
     def __init__(self, device_id, config_path): 
-        self.camera, self.converter = self.init_camera(device_id, config_path)
+        self.camera, self.converter, self.grabStatus = self.init_camera(device_id, config_path)
         self.frame_count = 0
         self.mem_pool = []
 
@@ -29,7 +28,9 @@ class CameraProcessor:
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         print("Initiate Camera & Converter")
 
-        return camera, converter
+        grabStatus = camera.RetrieveResult(50000, pylon.TimeoutHandling_Return) # donaldson wait for merge
+
+        return camera, converter, grabStatus
 
     def capture(self, grabResult):
         image = self.converter.Convert(grabResult)
@@ -55,6 +56,7 @@ class CameraProcessor:
         try:
             self.mem_pool = []
             while self.camera.IsGrabbing():
+
                 grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
 
                 if grabResult.GrabSucceeded():
@@ -66,7 +68,7 @@ class CameraProcessor:
                     self.frame_count += 1
 
                     if (len(self.mem_pool) > max_mempool):
-                        print("finish with len(mem_pool): ", len(self.mem_pool))
+                        print("Finish with len(mem_pool): ", len(self.mem_pool))
                         return self.mem_pool
 
                 grabResult.Release()
