@@ -1,7 +1,6 @@
 from pypylon import pylon
 import cv2
 import os
-from .utils import get_current_time
 import supervision as sv
 
 
@@ -58,6 +57,7 @@ class CameraProcessor:
         try:
             self.mem_pool = []
             while self.camera.IsGrabbing():
+
                 grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
 
                 if grabResult.GrabSucceeded():
@@ -69,7 +69,7 @@ class CameraProcessor:
                     self.frame_count += 1
 
                     if (len(self.mem_pool) > max_mempool):
-                        print("finish with len(mem_pool): ", len(self.mem_pool))
+                        print("Finish with len(mem_pool): ", len(self.mem_pool))
                         return self.mem_pool
 
                 grabResult.Release()

@@ -43,12 +43,3 @@ def write2plc_D(pymc, bit_address:list, values:list=[1], hold=False):
     
     time.sleep(1.5)
     pymc.randomwrite(word_devices=list(bit_address), word_values=list([0 for _ in range(len(values))]), dword_devices=list(bit_address), dword_values=list(values))
-
-
-
-
-
-
-
-def read_plc(pymc, headdevice):    
-    return pymc.batchread_bitunits(headdevice=headdevice, readsize=1)[0]
