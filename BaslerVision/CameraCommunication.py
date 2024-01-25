@@ -8,7 +8,7 @@ import supervision as sv
 class CameraProcessor:
 
     def __init__(self, device_id, config_path): 
-        self.camera, self.converter = self.init_camera(device_id, config_path)
+        self.camera, self.converter, self.grabStatus = self.init_camera(device_id, config_path)
         self.frame_count = 0
         self.mem_pool = []
 
@@ -23,13 +23,16 @@ class CameraProcessor:
 
         # load config
         pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
+        
 
         converter = pylon.ImageFormatConverter()
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
         print("Initiate Camera & Converter")
 
-        return camera, converter
+        grabStatus = camera.RetrieveResult(50000, pylon.TimeoutHandling_Return)
+
+        return camera, converter, grabStatus
 
     def capture(self, grabResult):
         image = self.converter.Convert(grabResult)
@@ -40,7 +43,7 @@ class CameraProcessor:
         try:
             
             while self.camera.IsGrabbing():
-                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                grabResult = self.camera.RetrieveResult(50000, pylon.TimeoutHandling_Return)
 
                 if grabResult.GrabSucceeded():
                     frame = self.capture(grabResult)
