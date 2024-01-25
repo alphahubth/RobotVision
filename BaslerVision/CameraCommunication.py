@@ -34,7 +34,7 @@ class CameraProcessor:
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
   
-        # Jest v2 no `grabStatus` return just this line for hardware trigger
+        # Jest v3 no `grabStatus` return just this line for hardware trigger
         camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
  
         return camera, converter
@@ -48,18 +48,15 @@ class CameraProcessor:
         try:
             
             while self.camera.IsGrabbing():
-                try:
-                    grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-                except:
-                    grabResult = None
-                else:
-                    if grabResult.GrabSucceeded():
-                        frame = self.capture(grabResult)
-                        return frame
-                finally:
-                    if grabResult is not None:
-                        grabResult.Release()
-                
+
+                # Jest v3 no no need for thorwing the exception just return & repeat
+                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+              
+                if grabResult.GrabSucceeded():
+                    frame = self.capture(grabResult)
+                        
+                grabResult.Release()
+                return frame
 
         except KeyboardInterrupt:  
             self.release_camera()
@@ -69,7 +66,7 @@ class CameraProcessor:
             self.mem_pool = []
             while self.camera.IsGrabbing():
 
-                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
                 if grabResult.GrabSucceeded():
                     frame = self.capture(grabResult)
