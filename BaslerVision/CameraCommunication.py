@@ -7,6 +7,7 @@ import supervision as sv
 class CameraProcessor:
 
     def __init__(self, device_ip, config_path):
+        print(f"Try initiating camera: {device_ip}")
         self.camera, self.converter = self.init_camera(device_ip, config_path)
         print(f"Initiate Camera & Converter {self.camera}", device_ip) 
         self.frame_count = 0
@@ -16,27 +17,33 @@ class CameraProcessor:
 
         def detect_cameras():
             return pylon.TlFactory.GetInstance().EnumerateDevices()
+        
     
         devices = detect_cameras()
 
         for device in devices:
-            if device.GetIpAddress() == device_ip:
+
+            if str(device.GetIpAddress()) == str(device_ip):
+          
                 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
+  
                 break
+
 
         camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
 
         # load config
         pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
         
-
+      
         converter = pylon.ImageFormatConverter()
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
   
         # Jest v3 no `grabStatus` return just this line for hardware trigger
+        # grabStatus = camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
         camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
- 
+
         return camera, converter
 
     def capture(self, grabResult):
@@ -46,17 +53,28 @@ class CameraProcessor:
 
     def one_capture(self):
         try:
-            
             while self.camera.IsGrabbing():
 
+                # self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
+                
                 # Jest v3 no no need for thorwing the exception just return & repeat
-                grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
-              
-                if grabResult.GrabSucceeded():
-                    frame = self.capture(grabResult)
-                        
-                grabResult.Release()
-                return frame
+                try:
+                    grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                except:
+                    grabResult = None
+            
+                else:
+                    if grabResult.GrabSucceeded():
+                        frame = self.capture(grabResult)
+                        grabResult.Release()
+                        # self.grabStatus = None
+                        # self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+                        return frame
+                finally:
+                    if grabResult is not None:
+                        grabResult.Release()
+                        # self.grabStatus = None
+                        # self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
         except KeyboardInterrupt:  
             self.release_camera()
