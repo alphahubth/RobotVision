@@ -23,6 +23,7 @@ class CameraProcessor:
         for device in devices:
 
             if str(device.GetIpAddress()) == str(device_ip):
+                print(str(device.GetIpAddress()) == str(device_ip))
                 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
                 break
 
@@ -36,7 +37,7 @@ class CameraProcessor:
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
   
-        # camera.RetrieveResult(5000, pylon.TimeoutHandling_Return) # hardware trigger -> move it out
+        camera.RetrieveResult(5000, pylon.TimeoutHandling_Return) # uncomment in main_alg1
 
         return camera, converter
 
@@ -47,13 +48,21 @@ class CameraProcessor:
     
     def trig_capture(self):
         while True:
-            
-            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+            grabResult = None
+            try:
+                grabResult = self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
 
-            if self.camera.IsGrabbing() and grabResult:
-                frame = self.capture(grabResult)
-                grabResult.Release()
-                return frame
+                if self.camera.IsGrabbing() and grabResult:
+                    frame = self.capture(grabResult)
+                    grabResult.Release()
+                    return frame
+
+            except:
+                pass
+
+            finally:
+                if grabResult is not None:
+                    grabResult.Release()
 
 
     def one_capture(self):
