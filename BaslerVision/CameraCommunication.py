@@ -2,6 +2,7 @@ from pypylon import pylon
 import cv2
 import os
 import supervision as sv
+import time
 
 class CameraProcessor:
 
@@ -17,15 +18,37 @@ class CameraProcessor:
 
         def detect_cameras():
             return pylon.TlFactory.GetInstance().EnumerateDevices()
+        
+        def initiate_camera_by_ip(device_ip):
+
+            devices = detect_cameras()
+            time.sleep(2)
+            for device in devices:
+            
+                if str(device.GetIpAddress()) == str(device_ip):
+                    # print(str(device.GetIpAddress()) == str(device_ip))
+                    try:
+                        camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
+                    except:
+                        print("WT.. JUST HAPPEN")
+                    else:
+                        return camera
+                else:
+                    print("re do")
+                    initiate_camera_by_ip(device_ip)
     
-        devices = detect_cameras()
+        
 
-        for device in devices:
+        camera = initiate_camera_by_ip(device_ip)
 
-            if str(device.GetIpAddress()) == str(device_ip):
-                print(str(device.GetIpAddress()) == str(device_ip))
-                camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
-                break
+        # for device in [""]:
+            
+        #     if str(device.GetIpAddress()) == str(device_ip):
+        #         print(str(device.GetIpAddress()) == str(device_ip))
+        #         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
+        #         break
+        #     else:
+        #         print(str(device.GetIpAddress()), "<>", str(device_ip))
 
         camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
 
