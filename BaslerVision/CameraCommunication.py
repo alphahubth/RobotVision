@@ -3,7 +3,6 @@ import cv2
 import os
 import supervision as sv
 
-
 class CameraProcessor:
 
     def __init__(self, device_ip, config_path):
@@ -13,36 +12,31 @@ class CameraProcessor:
         self.frame_count = 0
         self.mem_pool = []
 
+
     def init_camera(self, device_ip, config_path):
 
         def detect_cameras():
             return pylon.TlFactory.GetInstance().EnumerateDevices()
-        
     
         devices = detect_cameras()
 
         for device in devices:
 
             if str(device.GetIpAddress()) == str(device_ip):
-          
                 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
-  
                 break
-
 
         camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
 
         # load config
         pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
         
-      
+    
         converter = pylon.ImageFormatConverter()
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
   
-        # Jest v3 no `grabStatus` return just this line for hardware trigger
-        # grabStatus = camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
-        camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+        # camera.RetrieveResult(5000, pylon.TimeoutHandling_Return) # hardware trigger -> move it out
 
         return camera, converter
 
@@ -50,14 +44,22 @@ class CameraProcessor:
         image = self.converter.Convert(grabResult)
         image = image.GetArray()
         return image
+    
+    def trig_capture(self):
+        while True:
+            
+            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+
+            if self.camera.IsGrabbing() and grabResult:
+                frame = self.capture(grabResult)
+                grabResult.Release()
+                return frame
+
 
     def one_capture(self):
         try:
             while self.camera.IsGrabbing():
-
-                # self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
                 
-                # Jest v3 no no need for thorwing the exception just return & repeat
                 try:
                     grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
                 except:
@@ -67,17 +69,14 @@ class CameraProcessor:
                     if grabResult.GrabSucceeded():
                         frame = self.capture(grabResult)
                         grabResult.Release()
-                        # self.grabStatus = None
-                        # self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
                         return frame
                 finally:
                     if grabResult is not None:
                         grabResult.Release()
-                        # self.grabStatus = None
-                        # self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
         except KeyboardInterrupt:  
             self.release_camera()
+
 
     def timing_capture(self, exposure_time=30, max_mempool=10):
         try:
@@ -102,7 +101,6 @@ class CameraProcessor:
 
         except KeyboardInterrupt:  
             self.release_camera()
-
 
     def release_camera(self):
         self.camera.StopGrabbing()
