@@ -6,6 +6,12 @@ import time
 
 class CameraProcessor:
 
+    @staticmethod
+    def detect_cameras():
+        return pylon.TlFactory.GetInstance().EnumerateDevices()
+    
+    devices = detect_cameras()
+
     def __init__(self, device_ip, config_path):
         print(f"Try initiating camera: {device_ip}")
         self.camera, self.converter = self.init_camera(device_ip, config_path)
@@ -15,31 +21,12 @@ class CameraProcessor:
 
 
     def init_camera(self, device_ip, config_path):
-
-        def detect_cameras():
-            return pylon.TlFactory.GetInstance().EnumerateDevices()
-        
-        def initiate_camera_by_ip(device_ip):
-
-            devices = detect_cameras()
-            time.sleep(2)
-            for device in devices:
-            
-                if str(device.GetIpAddress()) == str(device_ip):
-                    # print(str(device.GetIpAddress()) == str(device_ip))
-                    try:
-                        camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
-                    except:
-                        print("WT.. JUST HAPPEN")
-                    else:
-                        return camera
-                else:
-                    print("re do")
-                    initiate_camera_by_ip(device_ip)
     
-        
+        for device in CameraProcessor.devices:
 
-        camera = initiate_camera_by_ip(device_ip)
+            if str(device.GetIpAddress()) == str(device_ip):
+                camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
+               
 
         # for device in [""]:
             
