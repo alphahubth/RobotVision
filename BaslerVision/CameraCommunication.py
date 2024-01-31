@@ -3,6 +3,8 @@ import cv2
 import os
 import supervision as sv
 import time
+import numpy as np
+from camera_config import *
 
 class CameraProcessor:
 
@@ -25,54 +27,54 @@ class CameraProcessor:
         for device in CameraProcessor.devices:
 
             if str(device.GetIpAddress()) == str(device_ip):
-                camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
-               
+                camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device)) # break point
+                camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+                # load config
+                pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
+                converter = pylon.ImageFormatConverter()
+                converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+                converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-        # for device in [""]:
-            
-        #     if str(device.GetIpAddress()) == str(device_ip):
-        #         print(str(device.GetIpAddress()) == str(device_ip))
-        #         camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device))
-        #         break
-        #     else:
-        #         print(str(device.GetIpAddress()), "<>", str(device_ip))
+                camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
-        camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+                return camera, converter
 
-        # load config
-        pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
         
-    
-        converter = pylon.ImageFormatConverter()
-        converter.OutputPixelFormat = pylon.PixelType_BGR8packed
-        converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
-  
-        camera.RetrieveResult(5000, pylon.TimeoutHandling_Return) # uncomment in main_alg1
-
-        return camera, converter
-
     def capture(self, grabResult):
         image = self.converter.Convert(grabResult)
         image = image.GetArray()
+        grabResult.Release()
         return image
     
-    def trig_capture(self):
-        while True:
-            grabResult = None
-            try:
-                grabResult = self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
+    def trig_capture(self, device_ip):
 
-                if self.camera.IsGrabbing() and grabResult:
-                    frame = self.capture(grabResult)
-                    grabResult.Release()
-                    return frame
+        frame = np.array([])
+        try:
+            # start_time = time.time()
+            # print(device_ip[-1], "operating")
+            grabResult = self.camera.RetrieveResult(2000, pylon.TimeoutHandling_Return)
+            # elapsed = time.time() - start_time  # Time taken to retrieve result
+            print(f"{device_ip[-1]} Grabbing: {self.camera.IsGrabbing()}, Succeeded: {grabResult.GrabSucceeded()}")
 
-            except:
-                pass
+            if (self.camera.IsGrabbing() and grabResult.GrabSucceeded()):
+                frame = self.capture(grabResult)
+            # else:
+            #     self.camera.TriggerMode.SetValue("Off")
+            #     self.camera.ExecuteSoftwareTrigger()
+            #     grabResult = self.camera.RetrieveResult(2000, pylon.TimeoutHandling_Return)
+            #     frame = self.capture(grabResult)
+            #     self.camera.TriggerMode.SetValue("On")
 
-            finally:
-                if grabResult is not None:
-                    grabResult.Release()
+            
+            grabResult.Release()
+        except:
+            # grabResult.Release()
+            return frame
+        else:
+            return frame
+        # finally:
+            # grabResult.Release()
+        
 
 
     def one_capture(self):
