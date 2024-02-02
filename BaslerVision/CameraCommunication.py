@@ -33,14 +33,8 @@ class CameraProcessor:
         converter = pylon.ImageFormatConverter()
         converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
-        # print(f"Initiate Camera & Converter {device_id}")
-        # try:
+  
         grabStatus = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-        # except:
-        #     grabStatus = None
-        # finally:
-        #     if grabStatus is not None:
-        #         grabStatus.Release()
 
         return camera, converter, grabStatus
 
