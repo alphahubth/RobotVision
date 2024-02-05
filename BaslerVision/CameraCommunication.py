@@ -58,12 +58,7 @@ class CameraProcessor:
 
             if (self.camera.IsGrabbing() and grabResult.GrabSucceeded()):
                 frame = self.capture(grabResult)
-            # else:
-            #     self.camera.TriggerMode.SetValue("Off")
-            #     self.camera.ExecuteSoftwareTrigger()
-            #     grabResult = self.camera.RetrieveResult(2000, pylon.TimeoutHandling_Return)
-            #     frame = self.capture(grabResult)
-            #     self.camera.TriggerMode.SetValue("On")
+   
 
             
             grabResult.Release()
