@@ -52,24 +52,23 @@ class CameraProcessor:
         try:
             # start_time = time.time()
             # print(device_ip[-1], "operating")
-            grabResult = self.camera.RetrieveResult(2000, pylon.TimeoutHandling_Return)
+            grabResult = self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
             # elapsed = time.time() - start_time  # Time taken to retrieve result
             print(f"{device_ip[-1]} Grabbing: {self.camera.IsGrabbing()}, Succeeded: {grabResult.GrabSucceeded()}")
 
             if (self.camera.IsGrabbing() and grabResult.GrabSucceeded()):
                 frame = self.capture(grabResult)
-   
 
-            
-            grabResult.Release()
+            else:
+                print("grab failed! one more trig please")
+
+            if grabResult.IsValid():
+                grabResult.Release()
         except:
-            # grabResult.Release()
             return frame
         else:
             return frame
-        # finally:
-            # grabResult.Release()
-        
+
 
 
     def one_capture(self):
