@@ -6,6 +6,7 @@ import time
 import numpy as np
 from camera_config import *
 
+
 class CameraProcessor:
 
     @staticmethod
@@ -53,6 +54,7 @@ class CameraProcessor:
             # start_time = time.time()
             # print(device_ip[-1], "operating")
             grabResult = self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
+            print(grabResult.LineStatusAll.GetValue())
             # elapsed = time.time() - start_time  # Time taken to retrieve result
             print(f"{device_ip[-1]} Grabbing: {self.camera.IsGrabbing()}, Succeeded: {grabResult.GrabSucceeded()}")
 
