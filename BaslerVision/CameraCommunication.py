@@ -31,7 +31,7 @@ class CameraProcessor:
                 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device)) # break point
                 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
                 # load config
-                pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
+                # pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
                 converter = pylon.ImageFormatConverter()
                 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
                 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
@@ -40,7 +40,7 @@ class CameraProcessor:
 
                 return camera, converter
 
-        
+
     def capture(self, grabResult):
         image = self.converter.Convert(grabResult)
         image = image.GetArray()
@@ -51,21 +51,18 @@ class CameraProcessor:
 
         frame = np.array([])
         try:
-            # start_time = time.time()
-            # print(device_ip[-1], "operating")
-            grabResult = self.camera.RetrieveResult(500, pylon.TimeoutHandling_Return)
-            print(grabResult.LineStatusAll.GetValue())
-            # elapsed = time.time() - start_time  # Time taken to retrieve result
+
+            grabResult = self.camera.RetrieveResult(100, pylon.TimeoutHandling_Return)
+
             print(f"{device_ip[-1]} Grabbing: {self.camera.IsGrabbing()}, Succeeded: {grabResult.GrabSucceeded()}")
 
-            if (self.camera.IsGrabbing() and grabResult.GrabSucceeded()):
+            if (self.camera.IsGrabbing() and grabResult.GrabSucceeded() and grabResult.IsValid()):
                 frame = self.capture(grabResult)
+                grabResult.Release()
 
             else:
                 print("grab failed! one more trig please")
 
-            if grabResult.IsValid():
-                grabResult.Release()
         except:
             return frame
         else:
@@ -79,13 +76,16 @@ class CameraProcessor:
                 
                 try:
                     grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+                    print(grabResult.GrabSucceeded())
                 except:
+                    print("exception")
                     grabResult = None
-            
+
                 else:
                     if grabResult.GrabSucceeded():
                         frame = self.capture(grabResult)
-                        grabResult.Release()
+                        print(frame.shape)
+                        # grabResult.Release()
                         return frame
                 finally:
                     if grabResult is not None:
