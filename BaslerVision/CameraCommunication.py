@@ -30,8 +30,10 @@ class CameraProcessor:
             if str(device.GetIpAddress()) == str(device_ip):
                 camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateDevice(device)) # break point
                 camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+                
                 # load config
-                # pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
+                pylon.FeaturePersistence.Load(config_path, camera.GetNodeMap(), True)
+
                 converter = pylon.ImageFormatConverter()
                 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
                 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
@@ -52,7 +54,7 @@ class CameraProcessor:
         frame = np.array([])
         try:
 
-            grabResult = self.camera.RetrieveResult(100, pylon.TimeoutHandling_Return)
+            grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
             print(f"{device_ip[-1]} Grabbing: {self.camera.IsGrabbing()}, Succeeded: {grabResult.GrabSucceeded()}")
 
