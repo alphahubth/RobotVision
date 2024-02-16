@@ -38,7 +38,7 @@ class CameraProcessor:
                 converter.OutputPixelFormat = pylon.PixelType_BGR8packed
                 converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
-                camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
+                # camera.RetrieveResult(5000, pylon.TimeoutHandling_Return)
 
                 return camera, converter
 
@@ -73,28 +73,30 @@ class CameraProcessor:
 
 
     def one_capture(self):
-        try:
-            while self.camera.IsGrabbing():
-                
-                try:
-                    grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
-                    print(grabResult.GrabSucceeded())
-                except:
-                    print("exception")
-                    grabResult = None
+                      
+        # try:
+        grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        print(grabResult.GrabSucceeded())
 
-                else:
-                    if grabResult.GrabSucceeded():
-                        frame = self.capture(grabResult)
-                        print(frame.shape)
-                        # grabResult.Release()
-                        return frame
-                finally:
-                    if grabResult is not None:
-                        grabResult.Release()
+        # except KeyboardInterrupt:  
+        #     self.release_camera()
 
-        except KeyboardInterrupt:  
-            self.release_camera()
+        # except:
+        #     print("exception")
+        # grabResult = None
+        # self.release_camera()
+
+        # else:
+        if grabResult.GrabSucceeded():
+            frame = self.capture(grabResult)
+            print(frame.shape)
+            # grabResult.Release()
+            return frame
+        # finally:
+        #     if grabResult is not None:
+        #         grabResult.Release()
+
+
 
 
     def timing_capture(self, exposure_time=30, max_mempool=10):
