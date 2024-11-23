@@ -15,7 +15,7 @@ def initiate_PLC(plc_address, plc_port):
     return pymc3e
 
 
-def read_plc(pymc, headdevice):    
+def read_plc_M(pymc, headdevice):    
     return pymc.batchread_bitunits(headdevice=headdevice, readsize=1)[0]
 
 def write2plc_M(pymc, bit_address:list, values:list=[1], hold=False):
